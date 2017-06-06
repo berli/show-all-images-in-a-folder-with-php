@@ -24,7 +24,7 @@ class Images {
         $this->types = "{*.jpg,*.JPG,*.jpeg,*.JPEG,*.png,*.PNG,*.gif,*.GIF}";
         $this->sortByName = false;
         $this->reverseOrder = true;
-        $this->lastModifiedDateFormat = "F d Y"; //"F d Y H:i:s"
+        $this->dateFormat = "F d Y"; //"F d Y H:i:s"
         $this->pagination = array (
                     "usePagination" => false,
                     "imagesPerPage" => 5
@@ -94,12 +94,10 @@ class Images {
         $imageName = basename($image);
         $imageName = pathinfo($imageName, PATHINFO_FILENAME);
 
-        # Get 'last modified' date
-        $lastModifiedDate = date($this->lastModifiedDateFormat, filemtime($image));
-
         $imageLabel = 'Image name: ' . $imageName;
-        $lastModifiedLabel = '(last modified: ' . $lastModifiedDate . ')';
-        $label = $imageLabel.' '.$lastModifiedLabel;
+        $dateLabel = $this->getDateLabel($image);
+
+        $label = $imageLabel.' '.$dateLabel;
 
         # Begin addition
         echo <<<EOT
@@ -112,6 +110,32 @@ class Images {
             <div class="ins-imgs-label">$label</div>
         </li>
 EOT;
+    }
+
+    /**
+     *
+     * Html image's date rendering
+     *
+     * @param    string $image to render
+     * @return    string $date
+     *
+     */
+    private function getDateLabel($image) {
+
+        $exifData = exif_read_data($image);
+
+        if ($exifData !== false) {
+            if (array_key_exists('DateTimeOriginal', $exifData)) {
+                $date = $exifData['DateTimeOriginal'];
+            } else if (array_key_exists('DateTime', $exifData)) {
+                $date = $exifData['DateTime'];
+            }
+        } else {
+            // last modified date
+            $date = 'last modified: ' . date($this->dateFormat, filemtime($image));
+        }
+
+        return '(' . $date . ')';
     }
 
     /**
